@@ -68,3 +68,10 @@ class Vote(BaseModel):
 
     class Config:
         form_attributes= True
+
+class VoteRequest(BaseModel):
+    post_id: int
+    dir: int
+
+    class Config:
+        form_attributes= True

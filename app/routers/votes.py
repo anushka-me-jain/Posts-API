@@ -8,21 +8,23 @@ router = APIRouter(
     tags=["Vote"]
 )
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def like_post(vote: schemas.Vote ,db: Session= Depends(get_db),
-               current_user: str= Depends(oauth2.get_current_user)):
+def like_post(vote: schemas.VoteRequest ,db: Session= Depends(get_db),
+               current_user : models.User = Depends(oauth2.get_current_user)):
+    user_id = current_user.id
+
     post = db.query(models.Post).filter(models.Post.id == vote.post_id).first()
     if not post:
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND,
                              detail = f"post of id {vote.post_id} does not exist") 
     else :
-        vote_query = db.query(models.Vote).filter(models.Vote.user_id== vote.user_id,
+        vote_query = db.query(models.Vote).filter(models.Vote.user_id== user_id,
                                                     models.Vote.post_id == vote.post_id)
         found_vote = vote_query.first()  
-        if vote.dir==1:
+        if vote.dir == 1:
             if found_vote:
                 raise HTTPException(status_code = status.HTTP_409_CONFLICT,
                                         detail= f"vote with id {vote.post_id} already exits")
-            new_vote = models.Vote(user_id = vote.user_id, post_id = vote.post_id)
+            new_vote = models.Vote(user_id = user_id, post_id = vote.post_id)
             db.add(new_vote)
             db.commit()
             db.refresh(new_vote)
